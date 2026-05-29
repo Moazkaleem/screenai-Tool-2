@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ScreenAI Pro — AI Resume Screener</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #080612;
+  --bg2:     #0e0a1e;
+  --bg3:     #130f28;
+  --purple:  #8b5cf6;
+  --purple-d:#6d28d9;
+  --purple-l:#a78bfa;
+  --gold:    #f59e0b;
+  --gold-l:  #fcd34d;
+  --green:   #10b981;
+  --coral:   #f43f5e;
+  --text:    #f5f3ff;
+  --muted:   #6b7280;
+  --muted2:  #9ca3af;
+  --border:  rgba(139,92,246,0.12);
+  --sans:    'Inter', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+nav {
+  background: rgba(8,6,18,0.95); border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 58px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px);
+}
+.nav-brand { display: flex; align-items: center; gap: 9px; }
+.nav-icon { width: 30px; height: 30px; background: linear-gradient(135deg, var(--purple), var(--purple-d)); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 0 14px rgba(139,92,246,0.4); }
+.nav-name { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.nav-badge { background: linear-gradient(135deg, var(--gold), #d97706); color: #1c0a00; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 10px; letter-spacing: 1px; }
+.nav-right { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.nav-unlimited { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); color: var(--purple-l); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 8px; }
+
+.main { max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
+
+.tool-header { text-align: center; margin-bottom: 36px; }
+.tool-header-badge { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); padding: 5px 14px; border-radius: 20px; }
+.tool-header-badge span { font-size: 12px; font-weight: 600; color: var(--gold-l); letter-spacing: 0.5px; }
+.tool-header h1 { font-size: clamp(24px,4vw,36px); font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; }
+.tool-header h1 span { color: var(--purple-l); }
+.tool-header p { font-size: 15px; color: var(--muted2); max-width: 480px; margin: 0 auto; line-height: 1.6; }
+
+.pro-strip { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 28px; }
+.pro-feature { display: flex; align-items: center; gap: 6px; background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); padding: 5px 12px; border-radius: 8px; font-size: 12px; color: var(--purple-l); font-weight: 500; }
+
+
+
+.error-box { background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.25); border-radius: 10px; padding: 12px 16px; color: #fda4af; font-size: 13px; margin-bottom: 14px; display: none; }
+.error-box.show { display: block; }
+
+.input-row { display: flex; gap: 16px; margin-bottom: 16px; }
+@media(max-width:640px){ .input-row { flex-direction: column; } }
+.input-box { flex: 1; display: flex; flex-direction: column; }
+.input-label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.input-box textarea { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; color: var(--text); font-family: var(--sans); font-size: 13px; line-height: 1.7; outline: none; resize: vertical; min-height: 280px; transition: border-color 0.2s; }
+.input-box textarea:focus { border-color: rgba(139,92,246,0.4); }
+.input-box textarea::placeholder { color: var(--muted); }
+
+.analyze-btn { width: 100%; padding: 16px; border-radius: 12px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--purple), var(--purple-d)); color: #fff; font-size: 15px; font-weight: 700; font-family: var(--sans); letter-spacing: 0.3px; transition: all 0.25s; box-shadow: 0 4px 20px rgba(139,92,246,0.35); }
+.analyze-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(139,92,246,0.45); }
+.analyze-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.progress-wrap { margin-top: 16px; display: none; }
+.progress-wrap.show { display: block; }
+.progress-bar-bg { background: rgba(255,255,255,0.05); border-radius: 8px; height: 6px; overflow: hidden; margin-bottom: 10px; }
+.progress-bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--purple), var(--gold)); transition: width 0.4s ease; width: 0%; }
+.progress-steps { display: flex; gap: 8px; flex-wrap: wrap; }
+.progress-step { font-size: 11px; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: var(--muted); transition: all 0.3s; }
+.progress-step.done { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.3); color: var(--purple-l); }
+
+.result-wrap { margin-top: 28px; display: none; }
+.result-wrap.show { display: block; }
+
+.score-card { background: var(--bg2); border-radius: 16px; padding: 28px; border: 1px solid rgba(139,92,246,0.2); background: linear-gradient(135deg, rgba(139,92,246,0.06), var(--bg2)); margin-bottom: 14px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.score-info { flex: 1; }
+.score-verdict { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+.score-summary { font-size: 14px; color: var(--muted2); line-height: 1.65; max-width: 420px; }
+.score-meta { display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
+.score-meta-item { text-align: center; }
+.score-meta-val { font-size: 24px; font-weight: 800; line-height: 1; }
+.score-meta-lbl { font-size: 11px; color: var(--muted); margin-top: 3px; letter-spacing: 0.5px; }
+
+.two-col { display: flex; gap: 14px; margin-bottom: 14px; }
+@media(max-width:600px){ .two-col { flex-direction: column; } }
+.result-box { flex: 1; background: var(--bg2); border-radius: 14px; padding: 22px; border: 1px solid var(--border); }
+.result-box-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+.tag-wrap { display: flex; flex-wrap: wrap; gap: 7px; }
+.tag { padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; }
+.tag-green { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+.tag-red { background: rgba(244,63,94,0.1); color: var(--coral); border: 1px solid rgba(244,63,94,0.2); }
+
+.list-box { background: var(--bg2); border-radius: 14px; padding: 22px; border: 1px solid var(--border); margin-bottom: 14px; }
+.list-box-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+.list-items { display: flex; flex-direction: column; gap: 10px; }
+.list-item { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--muted2); line-height: 1.6; }
+.list-bullet { flex-shrink: 0; margin-top: 2px; font-weight: 700; }
+
+.culture-box { background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 14px; padding: 20px 22px; margin-bottom: 14px; display: flex; gap: 14px; align-items: flex-start; }
+.culture-icon { font-size: 20px; flex-shrink: 0; }
+.culture-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--purple-l); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pro-tag { background: linear-gradient(135deg, var(--gold), #d97706); color: #1c0a00; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 6px; letter-spacing: 1px; }
+.culture-box p { font-size: 13px; color: var(--muted2); line-height: 1.65; }
+
+.interview-box { background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: 14px; padding: 22px; margin-bottom: 14px; }
+.interview-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-l); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.interview-questions { display: flex; flex-direction: column; gap: 10px; }
+.interview-q { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.12); border-radius: 9px; padding: 12px 16px; font-size: 13px; color: var(--muted2); line-height: 1.6; display: flex; gap: 10px; align-items: flex-start; }
+.q-num { color: var(--gold); font-weight: 700; flex-shrink: 0; }
+
+.action-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-new { flex: 1; padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, var(--purple), var(--purple-d)); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--sans); transition: all 0.2s; }
+.btn-new:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(139,92,246,0.35); }
+.btn-copy { flex: 1; padding: 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg2); color: var(--muted2); font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: all 0.2s; }
+.btn-copy:hover { border-color: rgba(139,92,246,0.3); color: var(--text); }
+
+.ring-svg { transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 10; }
+.ring-fill  { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray 1.2s ease; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-icon">🎯</div>
+    <span class="nav-name">ScreenAI</span>
+    <span class="nav-badge">PRO</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-unlimited">∞ Unlimited Screens</span>
+    <span>⚡ Powered by Gemini AI</span>
+  </div>
+</nav>
+
+<div class="main">
+
+  <div class="tool-header">
+    <div class="tool-header-badge"><span>👑 PRO PLAN — ALL FEATURES UNLOCKED</span></div>
+    <h1>AI Resume <span>Screener Pro</span></h1>
+    <p>Unlimited screens with full insights — culture fit and tailored interview questions included.</p>
+  </div>
+
+  <div class="pro-strip">
+    <div class="pro-feature">🎯 AI Score 0–100</div>
+    <div class="pro-feature">✅ Hire Verdict</div>
+    <div class="pro-feature">🔬 Skills Gap</div>
+    <div class="pro-feature">💪 Strengths & Concerns</div>
+    <div class="pro-feature">🤝 Culture Fit</div>
+    <div class="pro-feature">❓ Interview Questions</div>
+    <div class="pro-feature">∞ Unlimited</div>
+  </div>
+
+    </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="input-row">
+    <div class="input-box">
+      <div class="input-label">📋 Job Description</div>
+      <textarea id="jobDesc" placeholder="Paste the full job description here...
+
+Include: job title, responsibilities, required skills, experience level, and qualifications."></textarea>
+    </div>
+    <div class="input-box">
+      <div class="input-label">📄 Candidate Resume</div>
+      <textarea id="resumeText" placeholder="Paste the candidate's resume here...
+
+Include: work experience, education, skills, certifications, and any other relevant information."></textarea>
+    </div>
+  </div>
+
+  <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">
+    🚀 Screen This Candidate — PRO Analysis
+  </button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-steps">
+      <div class="progress-step" id="step1">Parsing resume...</div>
+      <div class="progress-step" id="step2">Matching skills...</div>
+      <div class="progress-step" id="step3">Scoring experience...</div>
+      <div class="progress-step" id="step4">Generating PRO report...</div>
+    </div>
+  </div>
+
+  <div class="result-wrap" id="resultWrap"></div>
+</div>
+
+<script>
+let lastResult = null;
+
+async function analyze() {
+  const jobDesc    = document.getElementById('jobDesc').value.trim();
+  const resumeText = document.getElementById('resumeText').value.trim();
+  const errorBox   = document.getElementById('errorBox');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+
+  if (!jobDesc || !resumeText) {
+    errorBox.style = '';
+    errorBox.textContent = '⚠️ Please fill in both the job description and the resume.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  errorBox.classList.remove('show');
+  analyzeBtn.disabled = true;
+  analyzeBtn.textContent = '🤖 Running PRO Analysis...';
+  document.getElementById('progressWrap').classList.add('show');
+  document.getElementById('resultWrap').classList.remove('show');
+
+  let pct = 0;
+  const steps = ['step1','step2','step3','step4'];
+  const fill  = document.getElementById('progressFill');
+  const timer = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 9, 88);
+    fill.style.width = pct + '%';
+    const idx = Math.floor(pct / 25);
+    steps.forEach((s, i) => { if (i < idx) document.getElementById(s).classList.add('done'); });
+  }, 400);
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    const res = await fetch('https://screenai-backend.onrender.com/screen', {
+      signal: controller.signal,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobDesc, resumeText, pro: true })
+    });
+
+    clearTimeout(timeout);
+    const parsed = await res.json();
+    clearInterval(timer);
+    fill.style.width = '100%';
+    steps.forEach(s => document.getElementById(s).classList.add('done'));
+
+    if (parsed.error) throw new Error(parsed.error);
+    lastResult = parsed;
+
+    setTimeout(() => {
+      document.getElementById('progressWrap').classList.remove('show');
+      showResult(parsed);
+      analyzeBtn.disabled = false;
+      analyzeBtn.textContent = '🚀 Screen This Candidate — PRO Analysis';
+    }, 500);
+
+  } catch(e) {
+    clearInterval(timer);
+    document.getElementById('progressWrap').classList.remove('show');
+    errorBox.style = '';
+    errorBox.textContent = '⚠️ Analysis failed. Please check your connection and try again.';
+    errorBox.classList.add('show');
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = '🚀 Screen This Candidate — PRO Analysis';
+  }
+}
+function resetTool() {
+  document.getElementById('jobDesc').value    = '';
+  document.getElementById('resumeText').value = '';
+  document.getElementById('resultWrap').classList.remove('show');
+  document.getElementById('progressWrap').classList.remove('show');
+  document.getElementById('errorBox').classList.remove('show');
+  document.getElementById('progressFill').style.width = '0%';
+  document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('done'));
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function copyReport() {
+  if (!lastResult) return;
+  const r = lastResult;
+  const txt = `SCREENAI PRO — RESUME SCREENING REPORT
+Score:          ${r.score}/100
+Verdict:        ${r.verdict}
+Job Match:      ${r.match_pct}%
+Experience Fit: ${r.experience_fit}
+
+SUMMARY
+${r.summary}
+
+STRENGTHS
+${(r.strengths||[]).map(s=>'• '+s).join('\n')}
+
+CONCERNS
+${(r.gaps||[]).map(g=>'• '+g).join('\n')}
+
+SKILLS MATCHED:  ${(r.top_skills_matched||[]).join(', ')}
+SKILLS MISSING:  ${(r.missing_skills||[]).join(', ')||'None'}
+
+CULTURE FIT
+${r.culture_note}
+
+INTERVIEW QUESTIONS
+${(r.interview_questions||[]).map((q,i)=>'Q'+(i+1)+'. '+q).join('\n')}
+Powered by ScreenAI Pro`;
+
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = '✅ Copied!';
+    btn.style.color = '#10b981';
+    setTimeout(() => { btn.textContent = '📋 Copy Full Report'; btn.style.color = ''; }, 2000);
+  });
+}
+
+</script>
